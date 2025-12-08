@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Trivia</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+    <!-- Load environment variables -->
+    <script src="env.js"></script>
+    <script type="module" src="main.js" defer></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Trivia</h1>
+            <p>Generate long-form trivia powered by AI</p>
+        </header>
+
+        <main>
+            <section id="setup-section" class="card">
+                <h2>Create Trivia</h2>
+                <div class="input-group">
+                    <label for="topic-input">Enter a topic (optional)</label>
+                    <input type="text" id="topic-input"
+                        placeholder="e.g., 19th Century Literature, Quantum Physics, Pop Culture">
+                </div>
+                <button id="generate-btn" class="btn primary">
+                    <span class="btn-text">Generate Trivia</span>
+                    <span class="loader hidden"></span>
+                </button>
+            </section>
+
+            <section id="trivia-section" class="card hidden">
+                <div class="trivia-content">
+                    <h3>Question</h3>
+                    <div id="question-text" class="markdown-body"></div>
+                </div>
+
+                <div class="actions">
+                    <button id="reveal-btn" class="btn secondary">Reveal Answer</button>
+                </div>
+
+                <div id="answer-container" class="answer-box hidden">
+                    <h3>Answer</h3>
+                    <div id="answer-text" class="markdown-body"></div>
+                </div>
+
+                <div class="actions">
+                    <button id="reset-btn" class="btn text-btn">Start Over</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Google Gemini</p>
+        </footer>
+    </div>
+</body>
+
+</html>
