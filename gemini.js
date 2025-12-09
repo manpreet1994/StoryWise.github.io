@@ -1,31 +1,61 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Read API key from environment. Prefer `process.env.GEMINI_API_KEY` for server/build-time
-// environments, fall back to `window.env?.GEMINI_API_KEY` for the browser if present.
-const API_KEY = (typeof process !== "undefined" && process.env?.GEMINI_API_KEY) || window.env?.GEMINI_API_KEY || "";
+// Read API key from the environment at build/run time. This file now expects
+// `process.env.GEMINI_API_KEY` to be provided by your runtime or build tooling.
+const MY_API_KEY = (typeof process !== "undefined" && process.env?.GEMINI_API_KEY) || "";
 
 let genAI = null;
 let model = null;
-
-/**
- * Initializes the Gemini API client.
- */
-function initGemini() {
-    if (!API_KEY || API_KEY === "YOUR_API_KEY_HERE") {
-        console.warn("Gemini API Key is not set. Please create env.js with your key.");
-        alert("API Key missing! Please check the console/setup.");
-    }
-    genAI = new GoogleGenerativeAI(API_KEY);
-    model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-}
 
 /**
  * Generates a trivia question and answer based on the topic.
  * @param {string} topic - The topic for the trivia.
  * @returns {Promise<{question: string, answer: string}>}
  */
+
+async function generateContent(promptText) {
+  // --- Configuration ---
+  const apiKey = MY_API_KEY;
+  const modelName = 'gemini-2.5-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  // --- Request Body ---
+  const body = {
+    contents: [{ parts: [{ text: promptText }] }],
+  };
+
+  try {
+    // 1. Await the fetch call
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    // Handle HTTP errors (e.g., 400, 500)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // 2. Await the JSON parsing
+    const data = await response.json();
+
+    // 3. Extract the text
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (generatedText) {
+      return generatedText;
+    } else {
+      throw new Error('Could not find generated text in response.');
+    }
+
+  } catch (error) {
+    console.error('API call failed:', error);
+    return `Error: ${error.message}`;
+  }
+}
+
 export async function generateTrivia(topic) {
-    if (!genAI) initGemini();
 
     const prompt = `
     I want to create a trivia. Follow these steps to create one
@@ -59,24 +89,22 @@ export async function generateTrivia(topic) {
     WHICH ANIME ARE WE TALKING ABOUT?
     
     Format the output exactly as a JSON object with two keys: "question" and "answer".
-    
+    example:
+    {
     "question": A detailed, intriguing paragraph that sets up the trivia question without revealing the answer immediately. It should be engaging and long-form.
     "answer": The concise answer to the question, followed by a brief 1-sentence interesting fact.
-    
+    }
     Do not use Markdown code blocks for the JSON. Just return the raw JSON string.
     `;
 
-    try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-
-        // Clean up potential markdown formatting if Gemini adds it
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-        return JSON.parse(cleanText);
-    } catch (error) {
-        console.error("Error generating trivia:", error);
-        throw error;
+    try{
+        const jsonString = await generateContent(prompt);
+        const data = JSON.parse(jsonString);
+        return data;
     }
+    catch (error) {
+        console.error('API call failed:', error);
+        throw error; // Re-throw the error to be caught by the caller
+    }
+ 
 }
