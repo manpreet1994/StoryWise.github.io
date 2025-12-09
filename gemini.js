@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Read API key from window.env (injected via env.js)
-const API_KEY = window.env?.GEMINI_API_KEY || "";
+// Read API key from environment. Prefer `process.env.GEMINI_API_KEY` for server/build-time
+// environments, fall back to `window.env?.GEMINI_API_KEY` for the browser if present.
+const API_KEY = (typeof process !== "undefined" && process.env?.GEMINI_API_KEY) || window.env?.GEMINI_API_KEY || "";
 
 let genAI = null;
 let model = null;
